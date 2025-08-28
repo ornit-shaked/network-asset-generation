@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Search Agent</title>
+        <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chgibb/css-spinners@2.2.1/css/spinner/three-quarters.min.css">
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #f7f9fc;
+                color: #333;
+            }
+            header {
+                background-color: #fff;
+                border-bottom: 2px solid #e0e0e0;
+                padding: 2rem 1rem;
+                text-align: center;
+            }
+            h1 {
+                font-size: 2.5rem;
+                color: #4a4a4a;
+            }
+            form {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            input[type="text"] {
+                padding: 0.75rem 1rem;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                width: 100%;
+                max-width: 400px;
+                box-sizing: border-box;
+            }
+            button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.75rem 2rem;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            #spinner {
+                margin: 4rem 0;
+            }
+            main {
+                padding: 2rem;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .job-card {
+                background-color: #fff;
+                border: 1px solid #e0e0e0;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .job-card h3 {
+                margin-top: 0;
+                color: #007bff;
+                font-size: 1.5rem;
+            }
+            .job-card p {
+                margin: 0.5rem 0;
+                color: #555;
+            }
+            .job-card a {
+                display: inline-block;
+                margin-top: 1rem;
+                color: #007bff;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            .job-card a:hover {
+                text-decoration: underline;
+            }
+            .no-results {
+                text-align: center;
+                font-size: 1.25rem;
+                color: #888;
+                padding: 2rem;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <form id="name-form" class="center">
+                <h1>Job Search Agent</h1>
+                <input type="text" name="name" placeholder="e.g., Data Scientist" required>
+                <button id="magic-button" type="submit">Find Jobs</button>
+            </form>
+        </header>
+
+        <div id="spinner" style="text-align: center; display: none">
+            <span class="three-quarters-loader" style="width: 100px; height: 100px; border-radius: 50%; border-width: 12px;"></span>
+        </div>
+
+        <main id="results-container" style="display: none">
+            <h2 style="text-align: center;">Job Postings Found</h2>
+            <div id="job-listings"></div>
+        </main>
+
+        <script>
+            const form = document.getElementById("name-form");
+            const spinner = document.getElementById("spinner");
+            const resultsContainer = document.getElementById("results-container");
+            const jobListingsDiv = document.getElementById("job-listings");
+
+            form.addEventListener("submit", (ev) => {
+                ev.preventDefault();
+
+                resultsContainer.style.display = "none";
+                spinner.style.display = "";
+                jobListingsDiv.innerHTML = "";
+
+                const formData = new FormData(form);
+
+                fetch("/process", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error("Network response was not ok.");
+                })
+                .then(data => {
+                    spinner.style.display = "none";
+                    resultsContainer.style.display = "";
+
+                    // Check if we received job postings
+                    if (data && data.job_postings && data.job_postings.length > 0) {
+                        data.job_postings.forEach(job => {
+                            const jobCard = document.createElement("article");
+                            jobCard.className = "job-card";
+
+                            jobCard.innerHTML = `
+                                <h3>${job.title}</h3>
+                                <p><strong>Company:</strong> ${job.company}</p>
+                                <p><strong>Location:</strong> ${job.location}</p>
+                                <p><strong>Summary:</strong> ${job.summary}</p>
+                                <p><a href="${job.url}" target="_blank" rel="noopener noreferrer">View Job Post</a></p>
+                            `;
+                            jobListingsDiv.appendChild(jobCard);
+                        });
+                    } else {
+                        // Handle case where no jobs were found
+                        jobListingsDiv.innerHTML = '<p class="no-results">No job postings found for this query.</p>';
+                    }
+                })
+                .catch(error => {
+                    spinner.style.display = "none";
+                    resultsContainer.style.display = "";
+                    jobListingsDiv.innerHTML = `<p class="no-results" style="color: red;">Error: ${error.message}</p>`;
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+            });
+        </script>
+    </body>
+</html>
