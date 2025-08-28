@@ -1,7 +1,7 @@
 TAVILY_API_KEY="create key on tavily, require login"
 LANGCHAIN_API_KEY="create key in https://smith.langchain.com/ the name should be match to the value in LANGCHAIN_PROJECT variable"
 LANGCHAIN_TRACING_V2=true
-LANGCHAIN_PROJECT=Langchain Starter
+LANGCHAIN_PROJECT=network-asset-generation
 
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
